@@ -19,8 +19,6 @@ namespace Benchmarks
 {
     public class Startup
     {
-        private readonly IHostingEnvironment _hostingEnv;
-
         public Startup(IHostingEnvironment hostingEnv, Scenarios scenarios)
         {
             // Set up configuration sources.
@@ -33,14 +31,13 @@ namespace Benchmarks
 
             Configuration = builder.Build();
             Scenarios = scenarios;
-            _hostingEnv = hostingEnv;
         }
 
         public IConfigurationRoot Configuration { get; set; }
 
         public Scenarios Scenarios { get; }
 
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<AppSettings>(Configuration);
 
@@ -54,7 +51,8 @@ namespace Benchmarks
             services.AddEntityFrameworkSqlServer();
             services.AddDbContext<ApplicationDbContext>();
 
-            var appSettings = Configuration.Get<AppSettings>();
+            var appSettings = new AppSettings();
+            Configuration.Bind(appSettings);
             if (Scenarios.Any("Raw") || Scenarios.Any("Dapper"))
             {
                 if (appSettings.Database == DatabaseServer.PostgreSql)
@@ -110,8 +108,6 @@ namespace Benchmarks
                         .AddRazorViewEngine();
                 }
             }
-
-            return services.BuildServiceProvider(validateScopes: _hostingEnv.IsDevelopment());
         }
 
         public void Configure(IApplicationBuilder app, ApplicationDbSeeder dbSeeder)
