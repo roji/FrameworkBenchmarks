@@ -106,7 +106,7 @@
       "versus": ""
     },
     "mvc-linux": {
-      "setup_file": "setup-plaintext",
+      "setup_file": "setup-mvc-plaintext",
       "plaintext_url": "/mvc/plaintext",
       "port": 8080,
       "approach": "Realistic",
@@ -125,7 +125,7 @@
       "versus": ""
     },
     "mvc-linux-json": {
-      "setup_file": "setup-json",
+      "setup_file": "setup-mvc-json",
       "json_url": "/mvc/json",
       "port": 8080,
       "approach": "Realistic",
@@ -144,7 +144,7 @@
       "versus": ""
     },
     "mvc-raw": {
-      "setup_file": "setup-raw",
+      "setup_file": "setup-mvc-raw",
       "db_url": "/mvc/db/raw",
       "query_url": "/mvc/queries/raw?queries=",
       "update_url": "/mvc/updates/raw?queries=",
@@ -166,7 +166,7 @@
       "versus": ""
     },
     "mvc-ef": {
-      "setup_file": "setup-ef",
+      "setup_file": "setup-mvc-ef",
       "db_url": "/mvc/db/ef",
       "query_url": "/mvc/queries/ef?queries=",
       "update_url": "/mvc/updates/ef?queries=",
@@ -188,7 +188,7 @@
       "versus": ""
     },
     "mvc-dapper": {
-      "setup_file": "setup-dapper",
+      "setup_file": "setup-mvc-dapper",
       "db_url": "/mvc/db/dapper",
       "query_url": "/mvc/queries/dapper?queries=",
       "update_url": "/mvc/updates/dapper?queries=",
