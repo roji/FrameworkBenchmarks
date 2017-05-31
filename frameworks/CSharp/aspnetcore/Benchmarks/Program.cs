@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime;
 using System.Threading;
 using Benchmarks.Configuration;
@@ -26,6 +27,7 @@ namespace Benchmarks
             Console.WriteLine("-----------------------");
 
             Console.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
+            Console.WriteLine($"WebHostBuilder loading from: {typeof(WebHostBuilder).GetTypeInfo().Assembly.Location}");
 
             var config = new ConfigurationBuilder()
                 .AddCommandLine(args)
@@ -43,7 +45,9 @@ namespace Benchmarks
                     .AddSingleton(new ConsoleArgs(args))
                     .AddSingleton<IScenariosConfiguration, ConsoleHostScenariosConfiguration>()
                     .AddSingleton<Scenarios>()
-                );
+                )
+                .UseDefaultServiceProvider(
+                    (context, options) => options.ValidateScopes = context.HostingEnvironment.IsDevelopment());
 
             if (String.Equals(Server, "Kestrel", StringComparison.OrdinalIgnoreCase))
             {
