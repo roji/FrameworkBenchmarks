@@ -2,16 +2,18 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <OutputType>Exe</OutputType>
+    <MvcRazorCompileOnPublish>true</MvcRazorCompileOnPublish>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="*.json;Views\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="wwwroot/**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="1.50.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0-preview1-final" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.ViewCompilation" Version="2.0.0-preview1-final" />
     <PackageReference Include="Microsoft.AspNetCore.Server.HttpSys" Version="2.0.0-preview1-final" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0-preview1-final" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0-preview1-final" />
