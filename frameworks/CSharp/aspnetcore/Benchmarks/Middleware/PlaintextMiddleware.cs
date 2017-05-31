@@ -26,19 +26,15 @@ namespace Benchmarks.Middleware
         {
             if (httpContext.Request.Path.StartsWithSegments(_path, StringComparison.Ordinal))
             {
-                return WriteResponse(httpContext.Response);
+                httpContext.Response.StatusCode = 200;
+                httpContext.Response.ContentType = "text/plain";
+                // HACK: Setting the Content-Length header manually avoids the cost of serializing the int to a string.
+                //       This is instead of: httpContext.Response.ContentLength = _helloWorldPayload.Length;
+                httpContext.Response.Headers["Content-Length"] = "13";
+                return httpContext.Response.Body.WriteAsync(_helloWorldPayload, 0, _helloWorldPayload.Length);
             }
 
             return _next(httpContext);
-        }
-
-        public static Task WriteResponse(HttpResponse response)
-        {
-            var payloadLength = _helloWorldPayload.Length;
-            response.StatusCode = 200;
-            response.ContentType = "text/plain";
-            response.ContentLength = payloadLength;
-            return response.Body.WriteAsync(_helloWorldPayload, 0, payloadLength);
         }
     }
 

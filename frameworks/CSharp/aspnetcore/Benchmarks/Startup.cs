@@ -11,15 +11,17 @@ using Benchmarks.Data;
 using Benchmarks.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Benchmarks
 {
     public class Startup
     {
+        private readonly IHostingEnvironment _hostingEnv;
+
         public Startup(IHostingEnvironment hostingEnv, Scenarios scenarios)
         {
             // Set up configuration sources.
@@ -31,15 +33,15 @@ namespace Benchmarks
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
-
             Scenarios = scenarios;
+            _hostingEnv = hostingEnv;
         }
 
         public IConfigurationRoot Configuration { get; set; }
 
         public Scenarios Scenarios { get; }
 
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.Configure<AppSettings>(Configuration);
 
@@ -50,24 +52,23 @@ namespace Benchmarks
             // Common DB services
             services.AddSingleton<IRandom, DefaultRandom>();
             services.AddSingleton<ApplicationDbSeeder>();
-            services.AddEntityFrameworkSqlServer();
+            services.AddEntityFrameworkSqlServer()
+                .AddDbContext<ApplicationDbContext>();
 
-            var appSettings = Configuration.Get<AppSettings>();
-            if (appSettings.Database == DatabaseServer.PostgreSql)
+            if (Scenarios.Any("Raw") || Scenarios.Any("Dapper"))
             {
-                services.AddDbContextPool<ApplicationDbContext>(options => options.UseNpgsql(appSettings.ConnectionString));
-                if (Scenarios.Any("Raw") || Scenarios.Any("Dapper"))
-                {
-                    services.AddSingleton<DbProviderFactory>(_ => NpgsqlFactory.Instance);
-                }
-            }
-            else
-            {
-                services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(appSettings.ConnectionString));
-                if (Scenarios.Any("Raw") || Scenarios.Any("Dapper"))
-                {
-                    services.AddSingleton<DbProviderFactory>(_ => SqlClientFactory.Instance);
-                }
+                services.AddSingleton<DbProviderFactory>((provider) => {
+                    var settings = provider.GetRequiredService<IOptions<AppSettings>>().Value;
+
+                    if (settings.Database == DatabaseServer.PostgreSql)
+                    {
+                        return NpgsqlFactory.Instance;
+                    }
+                    else
+                    {
+                        return SqlClientFactory.Instance;
+                    }
+                });
             }
 
             if (Scenarios.Any("Ef"))
@@ -113,6 +114,8 @@ namespace Benchmarks
                         .AddRazorViewEngine();
                 }
             }
+
+            return services.BuildServiceProvider(validateScopes: _hostingEnv.IsDevelopment());
         }
 
         public void Configure(IApplicationBuilder app, ApplicationDbSeeder dbSeeder)
