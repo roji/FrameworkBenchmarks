@@ -45,22 +45,22 @@ namespace Benchmarks
                     .AddSingleton(new ConsoleArgs(args))
                     .AddSingleton<IScenariosConfiguration, ConsoleHostScenariosConfiguration>()
                     .AddSingleton<Scenarios>()
-                )
-                .UseDefaultServiceProvider(
-                    (context, options) => options.ValidateScopes = context.HostingEnvironment.IsDevelopment());
+                );
 
             if (String.Equals(Server, "Kestrel", StringComparison.OrdinalIgnoreCase))
             {
                 var threads = GetThreadCount(config);
-                webHostBuilder = webHostBuilder.UseKestrel();
-                if (threads > 0)
+                webHostBuilder = webHostBuilder.UseKestrel(options =>
                 {
-                    webHostBuilder = webHostBuilder.UseLibuv(options => options.ThreadCount = threads);
-                }
+                    if (threads > 0)
+                    {
+                        options.ThreadCount = threads;
+                    }
+                });
             }
-            else if (String.Equals(Server, "HttpSys", StringComparison.OrdinalIgnoreCase))
+            else if (String.Equals(Server, "WebListener", StringComparison.OrdinalIgnoreCase))
             {
-                webHostBuilder = webHostBuilder.UseHttpSys();
+                webHostBuilder = webHostBuilder.UseWebListener();
             }
             else
             {

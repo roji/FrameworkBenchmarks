@@ -11,7 +11,6 @@ using Benchmarks.Data;
 using Benchmarks.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -20,6 +19,8 @@ namespace Benchmarks
 {
     public class Startup
     {
+        private readonly IHostingEnvironment _hostingEnv;
+
         public Startup(IHostingEnvironment hostingEnv, Scenarios scenarios)
         {
             // Set up configuration sources.
@@ -31,15 +32,15 @@ namespace Benchmarks
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
-
             Scenarios = scenarios;
+            _hostingEnv = hostingEnv;
         }
 
         public IConfigurationRoot Configuration { get; set; }
 
         public Scenarios Scenarios { get; }
 
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.Configure<AppSettings>(Configuration);
 
@@ -51,20 +52,16 @@ namespace Benchmarks
             services.AddSingleton<IRandom, DefaultRandom>();
             services.AddSingleton<ApplicationDbSeeder>();
             services.AddEntityFrameworkSqlServer();
+            services.AddDbContext<ApplicationDbContext>();
 
             var appSettings = Configuration.Get<AppSettings>();
-            if (appSettings.Database == DatabaseServer.PostgreSql)
+            if (Scenarios.Any("Raw") || Scenarios.Any("Dapper"))
             {
-                services.AddDbContextPool<ApplicationDbContext>(options => options.UseNpgsql(appSettings.ConnectionString));
-                if (Scenarios.Any("Raw") || Scenarios.Any("Dapper"))
+                if (appSettings.Database == DatabaseServer.PostgreSql)
                 {
                     services.AddSingleton<DbProviderFactory>(NpgsqlFactory.Instance);
                 }
-            }
-            else
-            {
-                services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(appSettings.ConnectionString));
-                if (Scenarios.Any("Raw") || Scenarios.Any("Dapper"))
+                else
                 {
                     services.AddSingleton<DbProviderFactory>(SqlClientFactory.Instance);
                 }
@@ -113,6 +110,8 @@ namespace Benchmarks
                         .AddRazorViewEngine();
                 }
             }
+
+            return services.BuildServiceProvider(validateScopes: _hostingEnv.IsDevelopment());
         }
 
         public void Configure(IApplicationBuilder app, ApplicationDbSeeder dbSeeder)
